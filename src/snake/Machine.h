@@ -11,7 +11,7 @@
 #define CHILDREN 20
 #define MUTATION_RATE 0.1
 #define MUTATION 1.0
-#define TEST_COUNT 1
+#define TEST_COUNT 4
 #define BOOL_INPUT true
 
 #define REPEAT 20
