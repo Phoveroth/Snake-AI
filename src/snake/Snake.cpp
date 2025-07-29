@@ -101,6 +101,7 @@ void Snake::OnUpdate(float deltaTime)
             Smooth();
             m_Accumulator = 0;
             m_LifeTime -= 1;
+            m_Steps++;
             
             //print();
             
@@ -302,6 +303,7 @@ bool Snake::Collision()
     if (m_Snake.at(0).x == m_Snake.back().x && m_Snake.at(0).y == m_Snake.back().y)
     {
         Food();
+        m_FoodCount++;
         return false;
     }
 
@@ -531,6 +533,9 @@ void Snake::ResetSnake()
     m_Direction = GLFW_KEY_UP;
     m_Prev = GLFW_KEY_UP;
     m_MakeBody = {BODY, 1};
+    m_FoodCount = 0;
+    m_Steps = 0;
+    m_LifeTime = LIFETIME;
     
     int initX = m_GameData->grid_width / 2 - 1;
     int initY = m_GameData->grid_height / 2 - 1;
@@ -551,7 +556,7 @@ bool Snake::GameStep()
 {
     if (m_LifeTime <= 0)
     {
-        Lost();
+        Lost(true);
         return true;
     }
     
@@ -563,11 +568,10 @@ bool Snake::GameStep()
     return false;
 }
 
-void Snake::Lost()
+void Snake::Lost(bool lifetime_death)
 {
-    m_LifeTime = LIFETIME;
     m_Machine = true;
-    std::cout << "\nSNAKE SCORE: " << m_Snake.size() - 6 << '\n';
+    std::cout << "\nSNAKE SCORE: " << m_Snake.size() - 6 << '\n' << "FITNESS SCORE: " << Fitness_Function(m_FoodCount, m_Steps, lifetime_death) << '\n';
     ResetSnake();
 }
 
@@ -675,268 +679,305 @@ unsigned int Snake::MakeDecision()
 
 void Snake::EvaluateInputs()
 {
-    // Sağ Beden
-    int look = m_Snake.back().x;
-    bool stop = false;
-    while (look < m_GameData->grid_width * m_GameData->grid_size)
+    if (BOOL_INPUT)
     {
-        look += m_GameData->grid_size;
+        // Beden
+        m_SnakeData.InputLayer[0].State = 0;
+        m_SnakeData.InputLayer[1].State = 0;
+        m_SnakeData.InputLayer[2].State = 0;
+        m_SnakeData.InputLayer[3].State = 0;
         for (int i = 1; i < m_Snake.size() - 1; i++)
         {
-            if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+            // Direkt sağında bedeni var mı?
+            if (m_Snake.back().x + m_GameData->grid_size == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
             {
-                m_SnakeData.InputLayer[0].State = 1 - ((float)(look - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
-                stop = true;
-                break;
+                m_SnakeData.InputLayer[0].State = 1;
             }
-            m_SnakeData.InputLayer[0].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Sol Beden
-    look = m_Snake.back().x;
-    stop = false;
-    while (look >= 0)
-    {
-        look -= m_GameData->grid_size;
-        for (int i = 1; i < m_Snake.size() - 1; i++)
-        {
-            if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+            // Direkt solunda bedeni var mı?
+            if (m_Snake.back().x - m_GameData->grid_size == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
             {
-                m_SnakeData.InputLayer[1].State = 1 - ((float)((m_Snake.back().x - m_GameData->grid_size) - look) / (m_GameData->grid_width * m_GameData->grid_size));
-                stop = true;
-                break;
+                m_SnakeData.InputLayer[1].State = 1;
             }
-            m_SnakeData.InputLayer[1].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Üst Beden
-    look = m_Snake.back().y;
-    stop = false;
-    while (look < m_GameData->grid_height * m_GameData->grid_size)
-    {
-        look += m_GameData->grid_size;
-        for (int i = 1; i < m_Snake.size() - 1; i++)
-        {
-            if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+            // Direkt üstünde bedeni var mı?
+            if (m_Snake.back().x == m_Snake.at(i).x && m_Snake.back().y + m_GameData->grid_size == m_Snake.at(i).y)
             {
-                m_SnakeData.InputLayer[2].State = 1 - ((float)(look - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
-                stop = true;
-                break;
+                m_SnakeData.InputLayer[2].State = 1;
             }
-            m_SnakeData.InputLayer[2].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Alt Beden
-    look = m_Snake.back().y;
-    stop = false;
-    while (look >= 0)
-    {
-        look -= m_GameData->grid_size;
-        for (int i = 1; i < m_Snake.size() - 1; i++)
-        {
-            if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+            // Direkt altında bedeni var mı?
+            if (m_Snake.back().x == m_Snake.at(i).x && m_Snake.back().y - m_GameData->grid_size == m_Snake.at(i).y)
             {
-                m_SnakeData.InputLayer[3].State = 1 - ((float)((m_Snake.back().y - m_GameData->grid_size) - look) / (m_GameData->grid_width * m_GameData->grid_size));
-                stop = true;
-                break;
+                m_SnakeData.InputLayer[3].State = 1;
             }
-            m_SnakeData.InputLayer[3].State = 0;
         }
-        if (stop) break;
-    }
 
-    // Sağda yem var mı?
-    if (m_Snake.back().x < m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[4].State = 1 - ((float)(m_Snake.at(0).x - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[4].State = 0; }
-
-    // Solda yem var mı?
-    if (m_Snake.back().x > m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[5].State = 1 - ((float)((m_Snake.back().x - m_GameData->grid_size) - m_Snake.at(0).x) / (m_GameData->grid_width * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[5].State = 0; }
-
-    // Üstte yem var mı?
-    if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y < m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[6].State = 1 - ((float)(m_Snake.at(0).y - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_height * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[6].State = 0; }
-
-    // Altta yem var mı?
-    if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y > m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[7].State = 1 - ((float)((m_Snake.back().y - m_GameData->grid_size) - m_Snake.at(0).y) / (m_GameData->grid_height * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[7].State = 0; }
-
-    int x_difference = m_Snake.at(0).x - m_Snake.back().x;
-    int y_difference = m_Snake.at(0).y - m_Snake.back().y;
-
-    // Sağ üstte yem var mı?
-    if ((x_difference == y_difference) && (x_difference >= 0))
-    {
-        m_SnakeData.InputLayer[8].State = 1 - ((float)(x_difference + y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[8].State = 0; }
-
-    // Sol üstte yem var mı?
-    if ((- x_difference == y_difference) && (y_difference >= 0))
-    {
-        m_SnakeData.InputLayer[9].State = 1 - ((float)(- x_difference + y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[9].State = 0; }
-
-    // Sağ altta yem var mı?
-    if ((x_difference == - y_difference) && (y_difference <= 0))
-    {
-        m_SnakeData.InputLayer[10].State = 1 - ((float)(x_difference - y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[10].State = 0; }
-
-    // Sol altta yem var mı?
-    if ((x_difference == y_difference) && (x_difference <= 0))
-    {
-        m_SnakeData.InputLayer[11].State = 1 - ((float)(- x_difference - y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
-    } else { m_SnakeData.InputLayer[11].State = 0; }
-
-    // Sağ Duvar
-    m_SnakeData.InputLayer[12].State = 1 - ((float)((m_GameData->grid_width * m_GameData->grid_size) - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
-
-    // Sol Duvar
-    m_SnakeData.InputLayer[13].State = 1 - ((float)(m_Snake.back().x) / (m_GameData->grid_width * m_GameData->grid_size));
-
-    // Üst Duvar
-    m_SnakeData.InputLayer[14].State = 1 - ((float)((m_GameData->grid_width * m_GameData->grid_size) - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_height * m_GameData->grid_size));
-
-    // Alt Duvar
-    m_SnakeData.InputLayer[15].State = 1 - ((float)(m_Snake.back().y) / (m_GameData->grid_height * m_GameData->grid_size));
-    
-    // Yılanın yönü sağ mı?
-    if (m_Direction == GLFW_KEY_RIGHT)
-    {
-        m_SnakeData.InputLayer[16].State = 1;
-    } else { m_SnakeData.InputLayer[16].State = 0; }
-
-    // Yılanın yönü sol mu?
-    if (m_Direction == GLFW_KEY_LEFT)
-    {
-        m_SnakeData.InputLayer[17].State = 1;
-    } else { m_SnakeData.InputLayer[17].State = 0; }
-
-    // Yılanın yönü yukarı mı?
-    if (m_Direction == GLFW_KEY_UP)
-    {
-        m_SnakeData.InputLayer[18].State = 1;
-    } else { m_SnakeData.InputLayer[18].State = 0; }
-
-    // Yılanın yönü aşağı mı?
-    if (m_Direction == GLFW_KEY_DOWN)
-    {
-        m_SnakeData.InputLayer[19].State = 1;
-    } else { m_SnakeData.InputLayer[19].State = 0; }
-
-    /* // Direkt sağında duvar var mı?
-    if (m_Snake.back().x + m_GameData->grid_size == m_GameData->grid_width * m_GameData->grid_size)
-    {
-        m_SnakeData.InputLayer[0].State = 1;
-    } else { m_SnakeData.InputLayer[0].State = 0; }
-
-    // Direkt solunda duvar var mı?
-    if (m_Snake.back().x - m_GameData->grid_size == (m_GameData->grid_width - m_GameData->dimension - 1) * m_GameData->grid_size)
-    {
-        m_SnakeData.InputLayer[1].State = 1;
-    } else { m_SnakeData.InputLayer[1].State = 0; }
-
-    // Direkt üstünde duvar var mı?
-    if (m_Snake.back().y + m_GameData->grid_size == m_GameData->grid_height * m_GameData->grid_size)
-    {
-        m_SnakeData.InputLayer[2].State = 1;
-    } else { m_SnakeData.InputLayer[2].State = 0; }
-
-    // Direkt altında duvar var mı?
-    if (m_Snake.back().y - m_GameData->grid_size == (m_GameData->grid_height - m_GameData->dimension - 1) * m_GameData->grid_size)
-    {
-        m_SnakeData.InputLayer[3].State = 1;
-    } else { m_SnakeData.InputLayer[3].State = 0; }
-
-    // Beden
-    for (int i = 1; i < m_Snake.size() - 1; i++)
-    {
-        // Direkt sağında bedeni var mı?
-        if (m_Snake.back().x + m_GameData->grid_size == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+        // Sağda yem var mı?
+        if (m_Snake.back().x < m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
         {
             m_SnakeData.InputLayer[4].State = 1;
         } else { m_SnakeData.InputLayer[4].State = 0; }
 
-        // Direkt solunda bedeni var mı?
-        if (m_Snake.back().x - m_GameData->grid_size == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+        // Solda yem var mı?
+        if (m_Snake.back().x > m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
         {
             m_SnakeData.InputLayer[5].State = 1;
         } else { m_SnakeData.InputLayer[5].State = 0; }
 
-        // Direkt üstünde bedeni var mı?
-        if (m_Snake.back().x == m_Snake.at(i).x && m_Snake.back().y + m_GameData->grid_size == m_Snake.at(i).y)
+        // Üstte yem var mı?
+        if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y < m_Snake.at(0).y)
         {
             m_SnakeData.InputLayer[6].State = 1;
         } else { m_SnakeData.InputLayer[6].State = 0; }
 
-        // Direkt altında bedeni var mı?
-        if (m_Snake.back().x == m_Snake.at(i).x && m_Snake.back().y - m_GameData->grid_size == m_Snake.at(i).y)
+        // Altta yem var mı?
+        if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y > m_Snake.at(0).y)
         {
             m_SnakeData.InputLayer[7].State = 1;
         } else { m_SnakeData.InputLayer[7].State = 0; }
+
+        int x_difference = m_Snake.at(0).x - m_Snake.back().x;
+        int y_difference = m_Snake.at(0).y - m_Snake.back().y;
+
+        // Sağ üstte yem var mı?
+        if ((x_difference == y_difference) && (x_difference >= 0))
+        {
+            m_SnakeData.InputLayer[8].State = 1;
+        } else { m_SnakeData.InputLayer[8].State = 0; }
+
+        // Sol üstte yem var mı?
+        if ((- x_difference == y_difference) && (y_difference >= 0))
+        {
+            m_SnakeData.InputLayer[9].State = 1;
+        } else { m_SnakeData.InputLayer[9].State = 0; }
+
+        // Sağ altta yem var mı?
+        if ((x_difference == - y_difference) && (y_difference <= 0))
+        {
+            m_SnakeData.InputLayer[10].State = 1;
+        } else { m_SnakeData.InputLayer[10].State = 0; }
+
+        // Sol altta yem var mı?
+        if ((x_difference == y_difference) && (x_difference <= 0))
+        {
+            m_SnakeData.InputLayer[11].State = 1;
+        } else { m_SnakeData.InputLayer[11].State = 0; }
+
+        // Direkt sağında duvar var mı?
+        if (m_Snake.back().x + m_GameData->grid_size == m_GameData->grid_width * m_GameData->grid_size)
+        {
+            m_SnakeData.InputLayer[12].State = 1;
+        } else { m_SnakeData.InputLayer[12].State = 0; }
+
+        // Direkt solunda duvar var mı?
+        if (m_Snake.back().x - m_GameData->grid_size == (m_GameData->grid_width - m_GameData->dimension - 1) * m_GameData->grid_size)
+        {
+            m_SnakeData.InputLayer[13].State = 1;
+        } else { m_SnakeData.InputLayer[13].State = 0; }
+
+        // Direkt üstünde duvar var mı?
+        if (m_Snake.back().y + m_GameData->grid_size == m_GameData->grid_height * m_GameData->grid_size)
+        {
+            m_SnakeData.InputLayer[14].State = 1;
+        } else { m_SnakeData.InputLayer[14].State = 0; }
+
+        // Direkt altında duvar var mı?
+        if (m_Snake.back().y - m_GameData->grid_size == (m_GameData->grid_height - m_GameData->dimension - 1) * m_GameData->grid_size)
+        {
+            m_SnakeData.InputLayer[15].State = 1;
+        } else { m_SnakeData.InputLayer[15].State = 0; }
+        
+        // Yılanın yönü sağ mı?
+        if (m_Direction == GLFW_KEY_RIGHT)
+        {
+            m_SnakeData.InputLayer[16].State = 1;
+        } else { m_SnakeData.InputLayer[16].State = 0; }
+
+        // Yılanın yönü sol mu?
+        if (m_Direction == GLFW_KEY_LEFT)
+        {
+            m_SnakeData.InputLayer[17].State = 1;
+        } else { m_SnakeData.InputLayer[17].State = 0; }
+
+        // Yılanın yönü yukarı mı?
+        if (m_Direction == GLFW_KEY_UP)
+        {
+            m_SnakeData.InputLayer[18].State = 1;
+        } else { m_SnakeData.InputLayer[18].State = 0; }
+
+        // Yılanın yönü aşağı mı?
+        if (m_Direction == GLFW_KEY_DOWN)
+        {
+            m_SnakeData.InputLayer[19].State = 1;
+        } else { m_SnakeData.InputLayer[19].State = 0; }
+
+    } else
+    {
+        // Sağ Beden
+        int look = m_Snake.back().x;
+        bool stop = false;
+        while (look < m_GameData->grid_width * m_GameData->grid_size)
+        {
+            look += m_GameData->grid_size;
+            for (int i = 1; i < m_Snake.size() - 1; i++)
+            {
+                if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+                {
+                    m_SnakeData.InputLayer[0].State = 1 - ((float)(look - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
+                    stop = true;
+                    break;
+                }
+                m_SnakeData.InputLayer[0].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Sol Beden
+        look = m_Snake.back().x;
+        stop = false;
+        while (look >= 0)
+        {
+            look -= m_GameData->grid_size;
+            for (int i = 1; i < m_Snake.size() - 1; i++)
+            {
+                if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+                {
+                    m_SnakeData.InputLayer[1].State = 1 - ((float)((m_Snake.back().x - m_GameData->grid_size) - look) / (m_GameData->grid_width * m_GameData->grid_size));
+                    stop = true;
+                    break;
+                }
+                m_SnakeData.InputLayer[1].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Üst Beden
+        look = m_Snake.back().y;
+        stop = false;
+        while (look < m_GameData->grid_height * m_GameData->grid_size)
+        {
+            look += m_GameData->grid_size;
+            for (int i = 1; i < m_Snake.size() - 1; i++)
+            {
+                if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+                {
+                    m_SnakeData.InputLayer[2].State = 1 - ((float)(look - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
+                    stop = true;
+                    break;
+                }
+                m_SnakeData.InputLayer[2].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Alt Beden
+        look = m_Snake.back().y;
+        stop = false;
+        while (look >= 0)
+        {
+            look -= m_GameData->grid_size;
+            for (int i = 1; i < m_Snake.size() - 1; i++)
+            {
+                if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+                {
+                    m_SnakeData.InputLayer[3].State = 1 - ((float)((m_Snake.back().y - m_GameData->grid_size) - look) / (m_GameData->grid_width * m_GameData->grid_size));
+                    stop = true;
+                    break;
+                }
+                m_SnakeData.InputLayer[3].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Sağda yem var mı?
+        if (m_Snake.back().x < m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
+        {
+            m_SnakeData.InputLayer[4].State = 1 - ((float)(m_Snake.at(0).x - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[4].State = 0; }
+
+        // Solda yem var mı?
+        if (m_Snake.back().x > m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
+        {
+            m_SnakeData.InputLayer[5].State = 1 - ((float)((m_Snake.back().x - m_GameData->grid_size) - m_Snake.at(0).x) / (m_GameData->grid_width * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[5].State = 0; }
+
+        // Üstte yem var mı?
+        if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y < m_Snake.at(0).y)
+        {
+            m_SnakeData.InputLayer[6].State = 1 - ((float)(m_Snake.at(0).y - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_height * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[6].State = 0; }
+
+        // Altta yem var mı?
+        if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y > m_Snake.at(0).y)
+        {
+            m_SnakeData.InputLayer[7].State = 1 - ((float)((m_Snake.back().y - m_GameData->grid_size) - m_Snake.at(0).y) / (m_GameData->grid_height * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[7].State = 0; }
+
+        int x_difference = m_Snake.at(0).x - m_Snake.back().x;
+        int y_difference = m_Snake.at(0).y - m_Snake.back().y;
+
+        // Sağ üstte yem var mı?
+        if ((x_difference == y_difference) && (x_difference >= 0))
+        {
+            m_SnakeData.InputLayer[8].State = 1 - ((float)(x_difference + y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[8].State = 0; }
+
+        // Sol üstte yem var mı?
+        if ((- x_difference == y_difference) && (y_difference >= 0))
+        {
+            m_SnakeData.InputLayer[9].State = 1 - ((float)(- x_difference + y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[9].State = 0; }
+
+        // Sağ altta yem var mı?
+        if ((x_difference == - y_difference) && (y_difference <= 0))
+        {
+            m_SnakeData.InputLayer[10].State = 1 - ((float)(x_difference - y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[10].State = 0; }
+
+        // Sol altta yem var mı?
+        if ((x_difference == y_difference) && (x_difference <= 0))
+        {
+            m_SnakeData.InputLayer[11].State = 1 - ((float)(- x_difference - y_difference - 2 * m_GameData->grid_size) / ((m_GameData->grid_width + m_GameData->grid_height) * m_GameData->grid_size));
+        } else { m_SnakeData.InputLayer[11].State = 0; }
+
+        // Sağ Duvar
+        m_SnakeData.InputLayer[12].State = 1 - ((float)((m_GameData->grid_width * m_GameData->grid_size) - (m_Snake.back().x + m_GameData->grid_size)) / (m_GameData->grid_width * m_GameData->grid_size));
+
+        // Sol Duvar
+        m_SnakeData.InputLayer[13].State = 1 - ((float)(m_Snake.back().x) / (m_GameData->grid_width * m_GameData->grid_size));
+
+        // Üst Duvar
+        m_SnakeData.InputLayer[14].State = 1 - ((float)((m_GameData->grid_width * m_GameData->grid_size) - (m_Snake.back().y + m_GameData->grid_size)) / (m_GameData->grid_height * m_GameData->grid_size));
+
+        // Alt Duvar
+        m_SnakeData.InputLayer[15].State = 1 - ((float)(m_Snake.back().y) / (m_GameData->grid_height * m_GameData->grid_size));
+        
+        // Yılanın yönü sağ mı?
+        if (m_Direction == GLFW_KEY_RIGHT)
+        {
+            m_SnakeData.InputLayer[16].State = 1;
+        } else { m_SnakeData.InputLayer[16].State = 0; }
+
+        // Yılanın yönü sol mu?
+        if (m_Direction == GLFW_KEY_LEFT)
+        {
+            m_SnakeData.InputLayer[17].State = 1;
+        } else { m_SnakeData.InputLayer[17].State = 0; }
+
+        // Yılanın yönü yukarı mı?
+        if (m_Direction == GLFW_KEY_UP)
+        {
+            m_SnakeData.InputLayer[18].State = 1;
+        } else { m_SnakeData.InputLayer[18].State = 0; }
+
+        // Yılanın yönü aşağı mı?
+        if (m_Direction == GLFW_KEY_DOWN)
+        {
+            m_SnakeData.InputLayer[19].State = 1;
+        } else { m_SnakeData.InputLayer[19].State = 0; }
+
     }
-
-    // Sağda yem var mı?
-    if (m_Snake.back().x < m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[8].State = 1;
-    } else { m_SnakeData.InputLayer[8].State = 0; }
-
-    // Solda yem var mı?
-    if (m_Snake.back().x > m_Snake.at(0).x && m_Snake.back().y == m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[9].State = 1;
-    } else { m_SnakeData.InputLayer[9].State = 0; }
-
-    // Üstte yem var mı?
-    if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y < m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[10].State = 1;
-    } else { m_SnakeData.InputLayer[10].State = 0; }
-
-    // Altta yem var mı?
-    if (m_Snake.back().x == m_Snake.at(0).x && m_Snake.back().y > m_Snake.at(0).y)
-    {
-        m_SnakeData.InputLayer[11].State = 1;
-    } else { m_SnakeData.InputLayer[11].State = 0; }
-    
-    // Yılanın yönü sağ mı?
-    if (m_Direction == GLFW_KEY_RIGHT)
-    {
-        m_SnakeData.InputLayer[12].State = 1;
-    } else { m_SnakeData.InputLayer[12].State = 0; }
-
-    // Yılanın yönü sol mu?
-    if (m_Direction == GLFW_KEY_LEFT)
-    {
-        m_SnakeData.InputLayer[13].State = 1;
-    } else { m_SnakeData.InputLayer[13].State = 0; }
-
-    // Yılanın yönü yukarı mı?
-    if (m_Direction == GLFW_KEY_UP)
-    {
-        m_SnakeData.InputLayer[14].State = 1;
-    } else { m_SnakeData.InputLayer[14].State = 0; }
-
-    // Yılanın yönü aşağı mı?
-    if (m_Direction == GLFW_KEY_DOWN)
-    {
-        m_SnakeData.InputLayer[15].State = 1;
-    } else { m_SnakeData.InputLayer[15].State = 0; } */
 }
 
 void Snake::WaitMachine()

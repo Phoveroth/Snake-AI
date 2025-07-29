@@ -100,3 +100,8 @@ struct Life
     Output OutputLayer[OUTPUT_LAYER];
     unsigned int ID;
 };
+
+inline long int Fitness_Function(unsigned int Food, int steps, bool isLost)
+{
+    return ((Food * Food) + (10 * Food) + steps - ((int)isLost * 200)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
+}

@@ -362,268 +362,305 @@ void Machine::ResetSnake()
 
 void Machine::EvaluateInputs()
 {
-    // Sağ Beden
-    int look = m_Snake.back().x;
-    bool stop = false;
-    while (look < m_GameData->grid_width)
+    if (BOOL_INPUT)
     {
-        look++;
-        for (int i = 1; i < m_Snake.size(); i++)
+        // Beden
+        m_Population[m_ActiveID].InputLayer[0].State = 0;
+        m_Population[m_ActiveID].InputLayer[1].State = 0;
+        m_Population[m_ActiveID].InputLayer[2].State = 0;
+        m_Population[m_ActiveID].InputLayer[3].State = 0;
+        for (int i = 0; i < m_Snake.size() - 1; i++)
         {
-            if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+            // Direkt sağında bedeni var mı?
+            if (m_Snake.back().x + 1 == m_Snake[i].x && m_Snake.back().y == m_Snake[i].y)
             {
-                m_Population[m_ActiveID].InputLayer[0].State = 1 - ((float)(look - (m_Snake.back().x + 1)) / m_GameData->grid_width);
-                stop = true;
-                break;
+                m_Population[m_ActiveID].InputLayer[0].State = 1;
             }
-            m_Population[m_ActiveID].InputLayer[0].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Sol Beden
-    look = m_Snake.back().x;
-    stop = false;
-    while (look > -1)
-    {
-        look--;
-        for (int i = 1; i < m_Snake.size(); i++)
-        {
-            if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+            // Direkt solunda bedeni var mı?
+            if (m_Snake.back().x - 1 == m_Snake[i].x && m_Snake.back().y == m_Snake[i].y)
             {
-                m_Population[m_ActiveID].InputLayer[1].State = 1 - ((float)((m_Snake.back().x - 1) - look) / m_GameData->grid_width);
-                stop = true;
-                break;
+                m_Population[m_ActiveID].InputLayer[1].State = 1;
             }
-            m_Population[m_ActiveID].InputLayer[1].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Üst Beden
-    look = m_Snake.back().y;
-    stop = false;
-    while (look < m_GameData->grid_height)
-    {
-        look++;
-        for (int i = 1; i < m_Snake.size(); i++)
-        {
-            if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+            // Direkt üstünde bedeni var mı?
+            if (m_Snake.back().x == m_Snake[i].x && m_Snake.back().y + 1 == m_Snake[i].y)
             {
-                m_Population[m_ActiveID].InputLayer[2].State = 1 - ((float)(look - (m_Snake.back().y + 1)) / m_GameData->grid_width);
-                stop = true;
-                break;
+                m_Population[m_ActiveID].InputLayer[2].State = 1;
             }
-            m_Population[m_ActiveID].InputLayer[2].State = 0;
-        }
-        if (stop) break;
-    }
 
-    // Alt Beden
-    look = m_Snake.back().y;
-    stop = false;
-    while (look > -1)
-    {
-        look--;
-        for (int i = 1; i < m_Snake.size(); i++)
-        {
-            if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+            // Direkt altında bedeni var mı?
+            if (m_Snake.back().x == m_Snake[i].x && m_Snake.back().y - 1 == m_Snake[i].y)
             {
-                m_Population[m_ActiveID].InputLayer[3].State = 1 - ((float)((m_Snake.back().y - 1) - look) / m_GameData->grid_width);
-                stop = true;
-                break;
+                m_Population[m_ActiveID].InputLayer[3].State = 1;
             }
-            m_Population[m_ActiveID].InputLayer[3].State = 0;
         }
-        if (stop) break;
-    }
 
-    // Sağda yem var mı?
-    if (m_Snake.back().x < m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[4].State = 1 - ((float)(m_FoodPos.x - (m_Snake.back().x + 1)) / m_GameData->grid_width);
-    } else { m_Population[m_ActiveID].InputLayer[4].State = 0; }
-
-    // Solda yem var mı?
-    if (m_Snake.back().x > m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[5].State = 1 - ((float)((m_Snake.back().x - 1) - m_FoodPos.x) / m_GameData->grid_width);
-    } else { m_Population[m_ActiveID].InputLayer[5].State = 0; }
-
-    // Üstte yem var mı?
-    if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y < m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[6].State = 1 - ((float)(m_FoodPos.y - (m_Snake.back().y + 1)) / m_GameData->grid_height);
-    } else { m_Population[m_ActiveID].InputLayer[6].State = 0; }
-
-    // Altta yem var mı?
-    if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y > m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[7].State = 1 - ((float)((m_Snake.back().y - 1) - m_FoodPos.y) / m_GameData->grid_height);
-    } else { m_Population[m_ActiveID].InputLayer[7].State = 0; }
-
-    int x_difference = m_FoodPos.x - m_Snake.back().x;
-    int y_difference = m_FoodPos.y - m_Snake.back().y;
-
-    // Sağ üstte yem var mı?
-    if ((x_difference == y_difference) && (x_difference >= 0))
-    {
-        m_Population[m_ActiveID].InputLayer[8].State = 1 - ((float)(x_difference + y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
-    } else { m_Population[m_ActiveID].InputLayer[8].State = 0; }
-
-    // Sol üstte yem var mı?
-    if ((- x_difference == y_difference) && (y_difference >= 0))
-    {
-        m_Population[m_ActiveID].InputLayer[9].State = 1 - ((float)(- x_difference + y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
-    } else { m_Population[m_ActiveID].InputLayer[9].State = 0; }
-
-    // Sağ altta yem var mı?
-    if ((x_difference == - y_difference) && (y_difference <= 0))
-    {
-        m_Population[m_ActiveID].InputLayer[10].State = 1 - ((float)(x_difference - y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
-    } else { m_Population[m_ActiveID].InputLayer[10].State = 0; }
-
-    // Sol altta yem var mı?
-    if ((x_difference == y_difference) && (x_difference <= 0))
-    {
-        m_Population[m_ActiveID].InputLayer[11].State = 1 - ((float)(- x_difference - y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
-    } else { m_Population[m_ActiveID].InputLayer[11].State = 0; }
-
-    // Sağ Duvar
-    m_Population[m_ActiveID].InputLayer[12].State = 1 - ((float)(m_GameData->grid_width - (m_Snake.back().x + 1)) / m_GameData->grid_width);
-
-    // Sol Duvar
-    m_Population[m_ActiveID].InputLayer[13].State = 1 - ((float)(m_Snake.back().x) / m_GameData->grid_width);
-
-    // Üst Duvar
-    m_Population[m_ActiveID].InputLayer[14].State = 1 - ((float)(m_GameData->grid_height - (m_Snake.back().y + 1)) / m_GameData->grid_height);
-
-    // Alt Duvar
-    m_Population[m_ActiveID].InputLayer[15].State = 1 - ((float)(m_Snake.back().y) / m_GameData->grid_height);
-    
-    // Yılanın yönü sağ mı?
-    if (m_Direction == GLFW_KEY_RIGHT)
-    {
-        m_Population[m_ActiveID].InputLayer[16].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[16].State = 0; }
-
-    // Yılanın yönü sol mu?
-    if (m_Direction == GLFW_KEY_LEFT)
-    {
-        m_Population[m_ActiveID].InputLayer[17].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[17].State = 0; }
-
-    // Yılanın yönü yukarı mı?
-    if (m_Direction == GLFW_KEY_UP)
-    {
-        m_Population[m_ActiveID].InputLayer[18].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[18].State = 0; }
-
-    // Yılanın yönü aşağı mı?
-    if (m_Direction == GLFW_KEY_DOWN)
-    {
-        m_Population[m_ActiveID].InputLayer[19].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[19].State = 0; }
-
-    /* // Direkt sağında duvar var mı?
-    if (m_Snake.back().x + 1 == m_GameData->grid_width)
-    {
-        m_Population[m_ActiveID].InputLayer[0].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[0].State = 0; }
-
-    // Direkt solunda duvar var mı?
-    if (m_Snake.back().x - 1 == -1)
-    {
-        m_Population[m_ActiveID].InputLayer[1].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[1].State = 0; }
-
-    // Direkt üstünde duvar var mı?
-    if (m_Snake.back().y + 1 == m_GameData->grid_height)
-    {
-        m_Population[m_ActiveID].InputLayer[2].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[2].State = 0; }
-
-    // Direkt altında duvar var mı?
-    if (m_Snake.back().y - 1 == -1)
-    {
-        m_Population[m_ActiveID].InputLayer[3].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[3].State = 0; }
-
-    // Beden
-    for (int i = 0; i < m_Snake.size() - 1; i++)
-    {
-        // Direkt sağında bedeni var mı?
-        if (m_Snake.back().x + 1 == m_Snake[i].x && m_Snake.back().y == m_Snake[i].y)
+        // Sağda yem var mı?
+        if (m_Snake.back().x < m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
         {
             m_Population[m_ActiveID].InputLayer[4].State = 1;
         } else { m_Population[m_ActiveID].InputLayer[4].State = 0; }
 
-        // Direkt solunda bedeni var mı?
-        if (m_Snake.back().x - 1 == m_Snake[i].x && m_Snake.back().y == m_Snake[i].y)
+        // Solda yem var mı?
+        if (m_Snake.back().x > m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
         {
             m_Population[m_ActiveID].InputLayer[5].State = 1;
         } else { m_Population[m_ActiveID].InputLayer[5].State = 0; }
 
-        // Direkt üstünde bedeni var mı?
-        if (m_Snake.back().x == m_Snake[i].x && m_Snake.back().y + 1 == m_Snake[i].y)
+        // Üstte yem var mı?
+        if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y < m_FoodPos.y)
         {
             m_Population[m_ActiveID].InputLayer[6].State = 1;
         } else { m_Population[m_ActiveID].InputLayer[6].State = 0; }
 
-        // Direkt altında bedeni var mı?
-        if (m_Snake.back().x == m_Snake[i].x && m_Snake.back().y - 1 == m_Snake[i].y)
+        // Altta yem var mı?
+        if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y > m_FoodPos.y)
         {
             m_Population[m_ActiveID].InputLayer[7].State = 1;
         } else { m_Population[m_ActiveID].InputLayer[7].State = 0; }
+
+        int x_difference = m_FoodPos.x - m_Snake.back().x;
+        int y_difference = m_FoodPos.y - m_Snake.back().y;
+
+        // Sağ üstte yem var mı?
+        if ((x_difference == y_difference) && (x_difference >= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[8].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[8].State = 0; }
+
+        // Sol üstte yem var mı?
+        if ((- x_difference == y_difference) && (y_difference >= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[9].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[9].State = 0; }
+
+        // Sağ altta yem var mı?
+        if ((x_difference == - y_difference) && (y_difference <= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[10].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[10].State = 0; }
+
+        // Sol altta yem var mı?
+        if ((x_difference == y_difference) && (x_difference <= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[11].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[11].State = 0; }
+
+        // Direkt sağında duvar var mı?
+        if (m_Snake.back().x + 1 == m_GameData->grid_width)
+        {
+            m_Population[m_ActiveID].InputLayer[12].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[12].State = 0; }
+
+        // Direkt solunda duvar var mı?
+        if (m_Snake.back().x - 1 == -1)
+        {
+            m_Population[m_ActiveID].InputLayer[13].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[13].State = 0; }
+
+        // Direkt üstünde duvar var mı?
+        if (m_Snake.back().y + 1 == m_GameData->grid_height)
+        {
+            m_Population[m_ActiveID].InputLayer[14].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[14].State = 0; }
+
+        // Direkt altında duvar var mı?
+        if (m_Snake.back().y - 1 == -1)
+        {
+            m_Population[m_ActiveID].InputLayer[15].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[15].State = 0; }
+
+        // Yılanın yönü sağ mı?
+        if (m_Direction == GLFW_KEY_RIGHT)
+        {
+            m_Population[m_ActiveID].InputLayer[16].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[16].State = 0; }
+
+        // Yılanın yönü sol mu?
+        if (m_Direction == GLFW_KEY_LEFT)
+        {
+            m_Population[m_ActiveID].InputLayer[17].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[17].State = 0; }
+
+        // Yılanın yönü yukarı mı?
+        if (m_Direction == GLFW_KEY_UP)
+        {
+            m_Population[m_ActiveID].InputLayer[18].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[18].State = 0; }
+
+        // Yılanın yönü aşağı mı?
+        if (m_Direction == GLFW_KEY_DOWN)
+        {
+            m_Population[m_ActiveID].InputLayer[19].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[19].State = 0; }
+
+    } else
+    {
+        // Sağ Beden
+        int look = m_Snake.back().x;
+        bool stop = false;
+        while (look < m_GameData->grid_width)
+        {
+            look++;
+            for (int i = 1; i < m_Snake.size(); i++)
+            {
+                if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+                {
+                    m_Population[m_ActiveID].InputLayer[0].State = 1 - ((float)(look - (m_Snake.back().x + 1)) / m_GameData->grid_width);
+                    stop = true;
+                    break;
+                }
+                m_Population[m_ActiveID].InputLayer[0].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Sol Beden
+        look = m_Snake.back().x;
+        stop = false;
+        while (look > -1)
+        {
+            look--;
+            for (int i = 1; i < m_Snake.size(); i++)
+            {
+                if (look == m_Snake.at(i).x && m_Snake.back().y == m_Snake.at(i).y)
+                {
+                    m_Population[m_ActiveID].InputLayer[1].State = 1 - ((float)((m_Snake.back().x - 1) - look) / m_GameData->grid_width);
+                    stop = true;
+                    break;
+                }
+                m_Population[m_ActiveID].InputLayer[1].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Üst Beden
+        look = m_Snake.back().y;
+        stop = false;
+        while (look < m_GameData->grid_height)
+        {
+            look++;
+            for (int i = 1; i < m_Snake.size(); i++)
+            {
+                if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+                {
+                    m_Population[m_ActiveID].InputLayer[2].State = 1 - ((float)(look - (m_Snake.back().y + 1)) / m_GameData->grid_width);
+                    stop = true;
+                    break;
+                }
+                m_Population[m_ActiveID].InputLayer[2].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Alt Beden
+        look = m_Snake.back().y;
+        stop = false;
+        while (look > -1)
+        {
+            look--;
+            for (int i = 1; i < m_Snake.size(); i++)
+            {
+                if (look == m_Snake.at(i).y && m_Snake.back().x == m_Snake.at(i).x)
+                {
+                    m_Population[m_ActiveID].InputLayer[3].State = 1 - ((float)((m_Snake.back().y - 1) - look) / m_GameData->grid_width);
+                    stop = true;
+                    break;
+                }
+                m_Population[m_ActiveID].InputLayer[3].State = 0;
+            }
+            if (stop) break;
+        }
+
+        // Sağda yem var mı?
+        if (m_Snake.back().x < m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
+        {
+            m_Population[m_ActiveID].InputLayer[4].State = 1 - ((float)(m_FoodPos.x - (m_Snake.back().x + 1)) / m_GameData->grid_width);
+        } else { m_Population[m_ActiveID].InputLayer[4].State = 0; }
+
+        // Solda yem var mı?
+        if (m_Snake.back().x > m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
+        {
+            m_Population[m_ActiveID].InputLayer[5].State = 1 - ((float)((m_Snake.back().x - 1) - m_FoodPos.x) / m_GameData->grid_width);
+        } else { m_Population[m_ActiveID].InputLayer[5].State = 0; }
+
+        // Üstte yem var mı?
+        if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y < m_FoodPos.y)
+        {
+            m_Population[m_ActiveID].InputLayer[6].State = 1 - ((float)(m_FoodPos.y - (m_Snake.back().y + 1)) / m_GameData->grid_height);
+        } else { m_Population[m_ActiveID].InputLayer[6].State = 0; }
+
+        // Altta yem var mı?
+        if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y > m_FoodPos.y)
+        {
+            m_Population[m_ActiveID].InputLayer[7].State = 1 - ((float)((m_Snake.back().y - 1) - m_FoodPos.y) / m_GameData->grid_height);
+        } else { m_Population[m_ActiveID].InputLayer[7].State = 0; }
+
+        int x_difference = m_FoodPos.x - m_Snake.back().x;
+        int y_difference = m_FoodPos.y - m_Snake.back().y;
+
+        // Sağ üstte yem var mı?
+        if ((x_difference == y_difference) && (x_difference >= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[8].State = 1 - ((float)(x_difference + y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
+        } else { m_Population[m_ActiveID].InputLayer[8].State = 0; }
+
+        // Sol üstte yem var mı?
+        if ((- x_difference == y_difference) && (y_difference >= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[9].State = 1 - ((float)(- x_difference + y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
+        } else { m_Population[m_ActiveID].InputLayer[9].State = 0; }
+
+        // Sağ altta yem var mı?
+        if ((x_difference == - y_difference) && (y_difference <= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[10].State = 1 - ((float)(x_difference - y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
+        } else { m_Population[m_ActiveID].InputLayer[10].State = 0; }
+
+        // Sol altta yem var mı?
+        if ((x_difference == y_difference) && (x_difference <= 0))
+        {
+            m_Population[m_ActiveID].InputLayer[11].State = 1 - ((float)(- x_difference - y_difference - 2) / (m_GameData->grid_width + m_GameData->grid_height));
+        } else { m_Population[m_ActiveID].InputLayer[11].State = 0; }
+
+        // Sağ Duvar
+        m_Population[m_ActiveID].InputLayer[12].State = 1 - ((float)(m_GameData->grid_width - (m_Snake.back().x + 1)) / m_GameData->grid_width);
+
+        // Sol Duvar
+        m_Population[m_ActiveID].InputLayer[13].State = 1 - ((float)(m_Snake.back().x) / m_GameData->grid_width);
+
+        // Üst Duvar
+        m_Population[m_ActiveID].InputLayer[14].State = 1 - ((float)(m_GameData->grid_height - (m_Snake.back().y + 1)) / m_GameData->grid_height);
+
+        // Alt Duvar
+        m_Population[m_ActiveID].InputLayer[15].State = 1 - ((float)(m_Snake.back().y) / m_GameData->grid_height);
+        
+        // Yılanın yönü sağ mı?
+        if (m_Direction == GLFW_KEY_RIGHT)
+        {
+            m_Population[m_ActiveID].InputLayer[16].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[16].State = 0; }
+
+        // Yılanın yönü sol mu?
+        if (m_Direction == GLFW_KEY_LEFT)
+        {
+            m_Population[m_ActiveID].InputLayer[17].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[17].State = 0; }
+
+        // Yılanın yönü yukarı mı?
+        if (m_Direction == GLFW_KEY_UP)
+        {
+            m_Population[m_ActiveID].InputLayer[18].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[18].State = 0; }
+
+        // Yılanın yönü aşağı mı?
+        if (m_Direction == GLFW_KEY_DOWN)
+        {
+            m_Population[m_ActiveID].InputLayer[19].State = 1;
+        } else { m_Population[m_ActiveID].InputLayer[19].State = 0; }
+        
     }
-
-    // Sağda yem var mı?
-    if (m_Snake.back().x < m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[8].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[8].State = 0; }
-
-    // Solda yem var mı?
-    if (m_Snake.back().x > m_FoodPos.x && m_Snake.back().y == m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[9].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[9].State = 0; }
-
-    // Üstte yem var mı?
-    if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y < m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[10].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[10].State = 0; }
-
-    // Altta yem var mı?
-    if (m_Snake.back().x == m_FoodPos.x && m_Snake.back().y > m_FoodPos.y)
-    {
-        m_Population[m_ActiveID].InputLayer[11].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[11].State = 0; }
-    
-    // Yılanın yönü sağ mı?
-    if (m_Direction == GLFW_KEY_RIGHT)
-    {
-        m_Population[m_ActiveID].InputLayer[12].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[12].State = 0; }
-
-    // Yılanın yönü sol mu?
-    if (m_Direction == GLFW_KEY_LEFT)
-    {
-        m_Population[m_ActiveID].InputLayer[13].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[13].State = 0; }
-
-    // Yılanın yönü yukarı mı?
-    if (m_Direction == GLFW_KEY_UP)
-    {
-        m_Population[m_ActiveID].InputLayer[14].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[14].State = 0; }
-
-    // Yılanın yönü aşağı mı?
-    if (m_Direction == GLFW_KEY_DOWN)
-    {
-        m_Population[m_ActiveID].InputLayer[15].State = 1;
-    } else { m_Population[m_ActiveID].InputLayer[15].State = 0; } */
 }
 
 void Machine::GameStep()
@@ -692,8 +729,7 @@ void Machine::TestIndividual(bool display)
 
             if (!display)
             {
-                m_Fitness[m_ActiveID] += (Food * Food * Food) + (500 * Food) + steps - ((int)m_Lost * 5000 / (Food + 1)); // Max 300,000
-                m_Fitness[m_ActiveID] += (Food * Food * Food) + (500 * Food) - i - ((int)m_Lost * 250 * Food);
+                m_Fitness[m_ActiveID] += Fitness_Function(Food, steps, m_Lost); // Max 300,000
             } else std::cout << "\nMACHINE SCORE: " << Food << '\n';
 
             m_Lost = false;

@@ -24,7 +24,7 @@ private:
     int Where(int Thisx, int Thisy, int toThisx, int toThisy, int fallback);
     void ResetSnake();
     bool GameStep();
-    void Lost();
+    void Lost(bool lifetime_death = false);
     unsigned int MakeDecision();
     void EvaluateInputs();
     void WaitMachine();
@@ -39,7 +39,7 @@ private:
     std::vector<glm::vec2> m_SnakePos;
 
     std::vector<glm::vec4> m_Snake;
-    unsigned int m_Direction, m_Prev, m_LifeTime, m_MoveTime;
+    unsigned int m_Direction, m_Prev, m_LifeTime, m_MoveTime, m_FoodCount, m_Steps;
     bool m_Food, m_Start, m_AlreadyCross, m_Machine;
     float m_Accumulator;
     glm::vec2 m_WishHead, m_PrevTail, m_MakeBody;
