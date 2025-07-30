@@ -35,7 +35,7 @@ struct WindowData {
 
 struct UIData {
     glm::vec2 TranslateSnake;
-    glm::vec2 TranslateBrain;
+    glm::vec2 TranslateNetwork;
 };
 
 struct GameData {
@@ -45,8 +45,6 @@ struct GameData {
     float atlas_size;
     int dimension;
     bool machine_print = false;
-    bool ready_machine = false;
-    bool ready_game = true;
 };
 
 #define APPLE 0

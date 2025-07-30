@@ -13,7 +13,7 @@ Snake::Snake(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gam
     m_Data = data;
     m_UIData = uidata;
     m_GameData = gamedata;
-    m_Proj = data ->projection;
+    m_Proj = data->projection;
 
     float vertex[] = {
     //  Positions                                     TexCoords
@@ -111,12 +111,8 @@ void Snake::OnUpdate(float deltaTime)
         Smooth();
     } else
     {
-        WakeUpGame();
         if (m_Machine)
         {
-            WaitMachine();
-            m_GameData->ready_machine = false;
-
             m_SnakeData = *m_BestOneData;
             std::cout << "\nGENERATION: (((" << m_SnakeData.ID * REPEAT << ")))\n";
             m_Start = true;
@@ -978,21 +974,6 @@ void Snake::EvaluateInputs()
         } else { m_SnakeData.InputLayer[19].State = 0; }
 
     }
-}
-
-void Snake::WaitMachine()
-{
-    std::unique_lock<std::mutex> lock(mtx);
-    cv.wait(lock, [this] { return m_GameData->ready_machine; });
-}
-
-void Snake::WakeUpGame()
-{
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        m_GameData->ready_game = true;
-    }
-    cv.notify_one();
 }
 
 void Snake::Debug(std::string message)

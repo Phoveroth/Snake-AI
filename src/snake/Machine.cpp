@@ -204,10 +204,6 @@ void Machine::Run()
         }
         
     }
-    
-    WaitGame();
-    m_GameData->ready_game = false;
-    WakeUpMachine();
 }
 
 void Machine::Move()
@@ -988,21 +984,6 @@ void Machine::Buffer()
     {
         m_Population[i] = m_PopulationBuffer[i];
     }
-}
-
-void Machine::WaitGame()
-{
-    std::unique_lock<std::mutex> lock(mtx);
-    cv.wait(lock, [this] { return m_GameData->ready_game; });
-}
-
-void Machine::WakeUpMachine()
-{
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        m_GameData->ready_machine = true;
-    }
-    cv.notify_one();
 }
 
 void Machine::DISPLAY()

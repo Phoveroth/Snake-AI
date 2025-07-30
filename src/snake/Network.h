@@ -2,20 +2,36 @@
 
 #include "Render.h"
 
+struct NodeData
+{
+    float activation;
+    float x;
+    float y;
+};
+
 class Network : public Render
 {
 public:
-    Network(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata, Life* snakedata);
+    Network(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata);
     ~Network();
 
-    void OnUpdate();
+    void OnUpdate(float deltaTime);
     void OnRender();
 
+    void Set();
+
 private:
+    void Flush();
+    void Test();
     void print();
     void Debug(std::string message);
 
     Life* m_SnakeData;
 
     std::vector<glm::vec2> m_NetworkPos;
+
+    static const int m_NodeCount = INPUT_LAYER + FIRST_LAYER + SECOND_LAYER + OUTPUT_LAYER;
+    float m_CubeSize;
+    
+    NodeData m_NodeDatas[m_NodeCount];
 };

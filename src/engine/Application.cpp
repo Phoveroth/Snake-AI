@@ -1,8 +1,5 @@
 #include "Application.h"
 
-std::mutex mtx;
-std::condition_variable cv;
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     WindowData* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
@@ -86,7 +83,7 @@ int main()
     std::cout << mode->width << " " << mode->height << " " << mode->refreshRate << "Hz" << '\n';
 
     GameData gamedata;
-    gamedata.dimension = 8; // 8, 16
+    gamedata.dimension = 16; // 8, 16
     gamedata.grid_size = mode->width / 64.0;
     gamedata.grid_width = gamedata.dimension;
     gamedata.grid_height = gamedata.dimension;
@@ -94,11 +91,13 @@ int main()
 
     UIData uidata;
     uidata.TranslateSnake = {100, 100};
+    uidata.TranslateNetwork = {500, 100};
 
     Life BestOneData;
 
     UserInterface interface(window, &data, &uidata, &gamedata);
     Snake snake(window, &data, &uidata, &gamedata, &BestOneData);
+    Network nn(window, &data, &uidata, &gamedata);
     
     std::thread worker(Thread, &gamedata, &BestOneData);
 
@@ -121,6 +120,9 @@ int main()
 
         snake.OnUpdate(deltaTime);
         snake.OnRender();
+
+        nn.OnUpdate(deltaTime);
+        nn.OnRender();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -14,3 +14,4 @@
 #include "snake/Snake.h"
 #include "snake/UserInterface.h"
 #include "snake/Machine.h"
+#include "snake/Network.h"

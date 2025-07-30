@@ -2,6 +2,7 @@
 
 #include "Render.h"
 #include "Machine.h"
+#include "Network.h"
 
 class Snake : public Render
 {
@@ -27,8 +28,6 @@ private:
     void Lost(bool lifetime_death = false);
     unsigned int MakeDecision();
     void EvaluateInputs();
-    void WaitMachine();
-    void WakeUpGame();
 
     void print();
     void Debug(std::string message);
@@ -36,9 +35,8 @@ private:
     Life* m_BestOneData;
     Life m_SnakeData;
 
-    std::vector<glm::vec2> m_SnakePos;
-
     std::vector<glm::vec4> m_Snake;
+
     unsigned int m_Direction, m_Prev, m_LifeTime, m_MoveTime, m_FoodCount, m_Steps;
     bool m_Food, m_Start, m_AlreadyCross, m_Machine;
     float m_Accumulator;
