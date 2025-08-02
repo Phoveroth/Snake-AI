@@ -38,8 +38,8 @@ Network::Network(GLFWwindow* window, WindowData* data, UIData* uidata, GameData*
 
     m_VAO->AddVBuffer(*m_VertexBuffer, vblayout);
     m_VAO->AddIBuffer(*m_InstanceBuffer, ivblayout);
+    GLCall(glVertexAttribDivisor(1, 1);)
     GLCall(glVertexAttribDivisor(2, 1);)
-    GLCall(glVertexAttribDivisor(3, 1);)
 
     m_IndexBuffer = std::make_unique<IndexBuffer>(indices, 6);
     m_Shader = std::make_unique<Shader>("../../res/shaders/Network.shader");
@@ -52,6 +52,11 @@ Network::~Network()
 
 void Network::OnUpdate(float deltaTime)
 {
+    if (m_GameData->set_values)
+    {
+        Set();
+        m_GameData->set_values = false;
+    }
 }
 
 void Network::OnRender()
@@ -59,9 +64,8 @@ void Network::OnRender()
     m_InstanceBuffer->Data(m_NodeDatas, m_NodeCount * sizeof(NodeData), GL_DYNAMIC_DRAW);
 
     m_Shader->Bind();
-    m_Shader->SetUniform2f("u_translate", m_UIData->TranslateNetwork.x, m_UIData->TranslateNetwork.y);
+    m_Shader->SetUniform2f("u_translate", (m_UIData->TranslateNetwork.x) + (m_GameData->grid_size / 2), (m_UIData->TranslateNetwork.y) + (m_GameData->grid_size / 2));
     m_Shader->SetUniformMat4f("u_proj", m_Data->projection);
-
     DrawInstanced(*m_VAO, *m_IndexBuffer, *m_Shader, m_NodeCount);
 }
 
@@ -71,7 +75,7 @@ void Network::Flush()
 
     for (int i = 0; i < INPUT_LAYER; i++)
     {
-        m_NodeDatas[id].activation = 0.0;
+        m_NodeDatas[id].activation = 0.2f;
         m_NodeDatas[id].y = i * 2 * m_CubeSize;
         m_NodeDatas[id].x = 0.0;
         id++;
@@ -79,7 +83,7 @@ void Network::Flush()
 
     for (int i = 0; i < FIRST_LAYER; i++)
     {
-        m_NodeDatas[id].activation = 0.0;
+        m_NodeDatas[id].activation = 0.4f;
         m_NodeDatas[id].y = i * 2 * m_CubeSize + 8 * m_CubeSize;
         m_NodeDatas[id].x = 1 * 5 * m_CubeSize;
         id++;
@@ -87,7 +91,7 @@ void Network::Flush()
 
     for (int i = 0; i < SECOND_LAYER; i++)
     {
-        m_NodeDatas[id].activation = 0.0;
+        m_NodeDatas[id].activation = 0.6f;
         m_NodeDatas[id].y = i * 2 * m_CubeSize + 12 * m_CubeSize;
         m_NodeDatas[id].x = 2 * 5 * m_CubeSize;
         id++;
@@ -95,17 +99,111 @@ void Network::Flush()
 
     for (int i = 0; i < OUTPUT_LAYER; i++)
     {
-        m_NodeDatas[id].activation = 0.0;
+        m_NodeDatas[id].activation = 0.8f;
         m_NodeDatas[id].y = i * 2 * m_CubeSize + 16 * m_CubeSize;
         m_NodeDatas[id].x = 3 * 5 * m_CubeSize;
         id++;
     }
 }
 
-void Network::Test()
-{
-}
-
 void Network::Set()
 {
+    float max = m_GameData->network_values.input[0];
+    float min = m_GameData->network_values.input[0];
+    int id = 0;
+
+    for (int i = 0; i < INPUT_LAYER; i++)
+    {
+        if (m_GameData->network_values.input[i] > max)
+        {
+            max = m_GameData->network_values.input[i];
+        }
+
+        if (m_GameData->network_values.input[i] < min)
+        {
+            min = m_GameData->network_values.input[i];
+        }
+    }
+
+    for (int i = 0; i < INPUT_LAYER; i++)
+    {
+        m_NodeDatas[id].activation = Normalize(max, min, m_GameData->network_values.input[i]);
+        id++;
+    }
+
+    max = m_GameData->network_values.first[0];
+    min = m_GameData->network_values.first[0];
+
+    for (int i = 0; i < FIRST_LAYER; i++)
+    {
+        if (m_GameData->network_values.first[i] > max)
+        {
+            max = m_GameData->network_values.first[i];
+        }
+
+        if (m_GameData->network_values.first[i] < min)
+        {
+            min = m_GameData->network_values.first[i];
+        }
+    }
+
+    for (int i = 0; i < FIRST_LAYER; i++)
+    {
+        m_NodeDatas[id].activation = Normalize(max, min, m_GameData->network_values.first[i]);
+        id++;
+    }
+
+    max = m_GameData->network_values.second[0];
+    min = m_GameData->network_values.second[0];
+
+    for (int i = 0; i < SECOND_LAYER; i++)
+    {
+        if (m_GameData->network_values.second[i] > max)
+        {
+            max = m_GameData->network_values.second[i];
+        }
+
+        if (m_GameData->network_values.second[i] < min)
+        {
+            min = m_GameData->network_values.second[i];
+        }
+    }
+
+    for (int i = 0; i < SECOND_LAYER; i++)
+    {
+        m_NodeDatas[id].activation = Normalize(max, min, m_GameData->network_values.second[i]);
+        id++;
+    }
+
+    max = m_GameData->network_values.output[0];
+    min = m_GameData->network_values.output[0];
+
+    for (int i = 0; i < OUTPUT_LAYER; i++)
+    {
+        if (m_GameData->network_values.output[i] > max)
+        {
+            max = m_GameData->network_values.output[i];
+        }
+
+        if (m_GameData->network_values.output[i] < min)
+        {
+            min = m_GameData->network_values.output[i];
+        }
+    }
+
+    for (int i = 0; i < OUTPUT_LAYER; i++)
+    {
+        m_NodeDatas[id].activation = Normalize(max, min, m_GameData->network_values.output[i]);
+        id++;
+    }
+}
+
+float Network::Normalize(float max, float min, float val)
+{
+    if (max == min)
+    {
+        max += 0.001f;
+    }
+    
+    return ((val - min) / (max - min));
 }

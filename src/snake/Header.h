@@ -21,8 +21,29 @@
 
 #include <GLFW/glfw3.h>
 
-extern std::mutex mtx;
-extern std::condition_variable cv;
+#define APPLE 0
+#define HEAD 1
+#define TAIL 2
+#define HALF_BODY 3
+#define CROSS 4
+#define BODY 5
+#define HALF_CROSS 6
+#define EMPTY 13
+
+const int WIDTH = 800;
+const int HEIGHT = 600;
+
+#define INPUT_LAYER 20
+#define FIRST_LAYER 12
+#define SECOND_LAYER 8
+#define OUTPUT_LAYER 4
+
+struct NetworkValues {
+    float input[INPUT_LAYER];
+    float first[FIRST_LAYER];
+    float second[SECOND_LAYER];
+    float output[OUTPUT_LAYER];
+};
 
 struct WindowData {
     int width;
@@ -45,24 +66,9 @@ struct GameData {
     float atlas_size;
     int dimension;
     bool machine_print = false;
+    bool set_values = false;
+    NetworkValues network_values;
 };
-
-#define APPLE 0
-#define HEAD 1
-#define TAIL 2
-#define HALF_BODY 3
-#define CROSS 4
-#define BODY 5
-#define HALF_CROSS 6
-#define EMPTY 13
-
-const int WIDTH = 800;
-const int HEIGHT = 600;
-
-#define INPUT_LAYER 20
-#define FIRST_LAYER 12
-#define SECOND_LAYER 8
-#define OUTPUT_LAYER 4
 
 struct Input
 {

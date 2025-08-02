@@ -18,13 +18,10 @@ public:
     void OnUpdate(float deltaTime);
     void OnRender();
 
-    void Set();
-
 private:
     void Flush();
-    void Test();
-    void print();
-    void Debug(std::string message);
+    void Set();
+    float Normalize(float max, float min, float val);
 
     Life* m_SnakeData;
 

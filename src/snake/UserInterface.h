@@ -4,33 +4,35 @@
 
 class SnakeUI : public Render
 {
-public:
+    public:
     SnakeUI(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata);
     ~SnakeUI();
-
+    
     void OnUpdate(float deltaTime);
     void OnRender();
-
-private:
+    
+    float m_SnakeHeight;
+    
+    private:
     std::unique_ptr<IndexBuffer> m_IndexBufferLines;
-    float m_SizePixel;
 };
 
 class NetworkUI : public Render
 {
-public:
+    public:
     NetworkUI(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata);
     ~NetworkUI();
 
     void OnUpdate(float deltaTime);
     void OnRender();
-
-private:
+    
+    float m_NetworkHeight;
+    
+    private:
     std::unique_ptr<IndexBuffer> m_IndexBufferLines;
-    float m_SizePixel;
 };
 
-class UserInterface
+class UserInterface : public Render
 {
 public:
     UserInterface(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata);
@@ -43,12 +45,7 @@ private:
     NetworkUI m_NetworkUI;
     SnakeUI m_SnakeUI;
 
-    WindowData* m_Data;
-    UIData* m_UIData;
-    GameData* m_GameData;
-
     bool m_DraggingSnake, m_DraggingNetwork;
-    float m_SizePixel;
 };
 
 // 0.1015f, 0.1054f, 0.1484f, 1.0f

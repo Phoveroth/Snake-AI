@@ -38,11 +38,11 @@ Snake::Snake(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gam
     VertexBufferLayout vblayout;
     VertexBufferLayout ivblayout;
 
-    vblayout.Push(GL_FLOAT, 2);
-    vblayout.Push(GL_FLOAT, 2);
-    ivblayout.Push(GL_FLOAT, 2);
-    ivblayout.Push(GL_FLOAT, 1);
-    ivblayout.Push(GL_FLOAT, 1);
+    vblayout.Push(GL_FLOAT, 2);  // Positions
+    vblayout.Push(GL_FLOAT, 2);  // TexCoords
+    ivblayout.Push(GL_FLOAT, 2); // Offset
+    ivblayout.Push(GL_FLOAT, 1); // Texture ID
+    ivblayout.Push(GL_FLOAT, 1); // Texture Rotate
 
     m_VAO->AddVBuffer(*m_VertexBuffer, vblayout);
     m_VAO->AddIBuffer(*m_InstanceBuffer, ivblayout);
@@ -254,22 +254,22 @@ void Snake::OtherInputs()
     switch (m_Data->key)
     {
     case GLFW_KEY_M:
-        m_Machine = true;
-        break;
-    
-    case GLFW_KEY_N:
         m_Machine = false;
         break;
 
     case GLFW_KEY_Z:
-        m_MoveTime = 60;
+        m_MoveTime = 360;
         break;
 
     case GLFW_KEY_X:
-        m_MoveTime = 10;
+        m_MoveTime = 60;
         break;
 
     case GLFW_KEY_C:
+        m_MoveTime = 10;
+        break;
+
+    case GLFW_KEY_V:
         if (m_GameData->machine_print)
         {
             m_GameData->machine_print = false;
@@ -634,6 +634,29 @@ unsigned int Snake::MakeDecision()
             m_SnakeData.OutputLayer[i].Value = 0;
         }
     }
+
+    // Send the Values to Network
+    for (int i = 0; i < INPUT_LAYER; i++)
+    {
+        m_GameData->network_values.input[i] = m_SnakeData.InputLayer[i].State;
+    }
+
+    for (int i = 0; i < FIRST_LAYER; i++)
+    {
+        m_GameData->network_values.first[i] = m_SnakeData.FirstLayer[i].Value;
+    }
+
+    for (int i = 0; i < SECOND_LAYER; i++)
+    {
+        m_GameData->network_values.second[i] = m_SnakeData.SecondLayer[i].Value;
+    }
+
+    for (int i = 0; i < OUTPUT_LAYER; i++)
+    {
+        m_GameData->network_values.output[i] = m_SnakeData.OutputLayer[i].Value;
+    }
+
+    m_GameData->set_values = true;
 
     float sum = 0;
 

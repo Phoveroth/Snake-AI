@@ -91,7 +91,7 @@ int main()
 
     UIData uidata;
     uidata.TranslateSnake = {100, 100};
-    uidata.TranslateNetwork = {500, 100};
+    uidata.TranslateNetwork = {1000, 100};
 
     Life BestOneData;
 

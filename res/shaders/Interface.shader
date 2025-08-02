@@ -4,11 +4,11 @@
 layout(location = 0) in vec2 position;
 
 uniform mat4 u_proj;
-uniform vec2 u_translateSnake;
+uniform vec2 u_translateInterface;
 
 void main()
 {
-   gl_Position = u_proj * vec4(position + u_translateSnake, 0.0, 1.0);
+   gl_Position = u_proj * vec4(position + u_translateInterface, 0.0, 1.0);
 
 };
 
