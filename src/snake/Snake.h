@@ -25,7 +25,7 @@ private:
     int Where(int Thisx, int Thisy, int toThisx, int toThisy, int fallback);
     void ResetSnake();
     bool GameStep();
-    void Lost(bool lifetime_death = false);
+    void Lost(bool collision = true);
     unsigned int MakeDecision();
     void EvaluateInputs();
 

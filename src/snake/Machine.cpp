@@ -725,7 +725,7 @@ void Machine::TestIndividual(bool display)
 
             if (!display)
             {
-                m_Fitness[m_ActiveID] += Fitness_Function(Food, steps, m_Lost); // Max 300,000
+                m_Fitness[m_ActiveID] += Fitness_Function(Food, steps, m_Lost);
             } else std::cout << "\nMACHINE SCORE: " << Food << '\n';
 
             m_Lost = false;

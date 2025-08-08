@@ -3,8 +3,8 @@
 #include "Header.h"
 
 #define POPULATION_SIZE 202 // select / 2 * children + elitism
-#define LIFETIME 100 // 100
-#define LIFEADD 20 // 20
+#define LIFETIME 200 // 100
+#define LIFEADD 60 // 20
 #define SELECT 20
 #define ELITISM 2
 #define ALPHA 0.4

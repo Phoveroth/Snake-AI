@@ -87,7 +87,6 @@ int main()
     gamedata.grid_size = mode->width / 64.0;
     gamedata.grid_width = gamedata.dimension;
     gamedata.grid_height = gamedata.dimension;
-    gamedata.atlas_size = 0.25f;
 
     UIData uidata;
     uidata.TranslateSnake = {100, 100};
@@ -104,13 +103,30 @@ int main()
     // Delta Time
     auto currentTime = std::chrono::steady_clock::now();
     auto lastTime = currentTime;
-    float deltaTime;
+    float deltaTime = 0;
+
+    float accumulator = 0;
+    float smooth = 0;
 
     while(!glfwWindowShouldClose(window))
     {
         currentTime = std::chrono::steady_clock::now();
         deltaTime = std::chrono::duration<float, std::milli>(currentTime - lastTime).count();
-        lastTime = currentTime;
+        if (gamedata.debugMode)
+        {
+            accumulator += deltaTime;
+            if (accumulator >= 360.0f)
+            {
+                accumulator = 360.0f;
+                smooth = accumulator / 360.0f;
+                std::cout << '\n' << smooth << '\n';
+                accumulator = 0.0f;
+            }
+            smooth = accumulator / 360.0f;
+            std::cout << '\n' << smooth << '\n';
+            std::cin.get();
+        }
+        lastTime = std::chrono::steady_clock::now();
 
         GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));

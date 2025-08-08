@@ -63,11 +63,11 @@ struct GameData {
     float grid_size;
     int grid_width;
     int grid_height;
-    float atlas_size;
     int dimension;
     bool machine_print = false;
     bool set_values = false;
     NetworkValues network_values;
+    bool debugMode = false;
 };
 
 struct Input
@@ -105,7 +105,7 @@ struct Life
     unsigned int ID;
 };
 
-inline long int Fitness_Function(unsigned int Food, int steps, bool isLost)
+inline long int Fitness_Function(unsigned int Food, int steps, bool isCollision)
 {
-    return ((Food * Food) + (10 * Food) + steps - ((int)isLost * 200)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
+    return ((Food * Food) + (10 * Food) + steps - ((int)isCollision * 200)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
 }

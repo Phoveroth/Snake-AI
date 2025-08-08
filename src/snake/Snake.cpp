@@ -16,11 +16,11 @@ Snake::Snake(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gam
     m_Proj = data->projection;
 
     float vertex[] = {
-    //  Positions                                     TexCoords
-                         0.0f,                  0.0f,                   0.0f,                   0.0f, // Bottom Left
-        m_GameData->grid_size,                  0.0f, m_GameData->atlas_size,                   0.0f, // Bottom Right
-        m_GameData->grid_size, m_GameData->grid_size, m_GameData->atlas_size, m_GameData->atlas_size, // Top Right
-                         0.0f, m_GameData->grid_size,                   0.0f, m_GameData->atlas_size  // Top Left
+    //  Positions                                    TexCoords
+                         0.0f,                  0.0f,         1.0f/256.0f,         1.0f/256.0f, // Bottom Left
+        m_GameData->grid_size,                  0.0f, 0.25f - 1.0f/256.0f,         1.0f/256.0f, // Bottom Right
+        m_GameData->grid_size, m_GameData->grid_size, 0.25f - 1.0f/256.0f, 0.25f - 1.0f/256.0f, // Top Right
+                         0.0f, m_GameData->grid_size,         1.0f/256.0f, 0.25f - 1.0f/256.0f  // Top Left
     };
 
     unsigned int indices[] = {
@@ -103,9 +103,8 @@ void Snake::OnUpdate(float deltaTime)
             m_LifeTime -= 1;
             m_Steps++;
             
-            //print();
-            
             if (GameStep()) return;
+            Erase();
         }
         
         Smooth();
@@ -257,6 +256,10 @@ void Snake::OtherInputs()
         m_Machine = false;
         break;
 
+    case GLFW_KEY_N:
+        m_Machine = true;
+        break;
+
     case GLFW_KEY_Z:
         m_MoveTime = 360;
         break;
@@ -277,6 +280,10 @@ void Snake::OtherInputs()
         {
             m_GameData->machine_print = true;
         }
+        break;
+
+    case GLFW_KEY_B:
+        Lost(false);
         break;
 
     /* case GLFW_KEY_A:
@@ -536,12 +543,11 @@ void Snake::ResetSnake()
     int initX = m_GameData->grid_width / 2 - 1;
     int initY = m_GameData->grid_height / 2 - 1;
     m_Snake.clear();
-    m_Snake.push_back({0, 0, APPLE, 0});                                                                 // Apple
-    m_Snake.push_back({initX * m_GameData->grid_size, (initY - 2) * m_GameData->grid_size, TAIL, 1});    // Tail
-    m_Snake.push_back({initX * m_GameData->grid_size, (initY - 1) * m_GameData->grid_size, EMPTY, 1});   // Last Body
-    m_Snake.push_back({initX * m_GameData->grid_size, (initY - 1) * m_GameData->grid_size, BODY, 1});    // Body
-    m_Snake.push_back({initX * m_GameData->grid_size, (initY    ) * m_GameData->grid_size, BODY, 1});    // Body
-    m_Snake.push_back({initX * m_GameData->grid_size, (initY + 1) * m_GameData->grid_size, HEAD, 1});    // Head
+    m_Snake.push_back({0, 0, APPLE, 0});                                                                      // Apple
+    m_Snake.push_back({initX * m_GameData->grid_size, (initY - 2) * m_GameData->grid_size, TAIL, 1});         // Tail
+    m_Snake.push_back({initX * m_GameData->grid_size, (initY - 1) * m_GameData->grid_size, BODY, 1});         // Last Body
+    m_Snake.push_back({initX * m_GameData->grid_size, (initY    ) * m_GameData->grid_size, HALF_BODY, 1});    // Body
+    m_Snake.push_back({initX * m_GameData->grid_size, (initY + 1) * m_GameData->grid_size, HEAD, 1});         // Head
     Food();
     m_Food = false;
     m_WishHead = {m_Snake.back().x, m_Snake.back().y};
@@ -552,22 +558,21 @@ bool Snake::GameStep()
 {
     if (m_LifeTime <= 0)
     {
-        Lost(true);
+        Lost(false);
         return true;
     }
     
     if (Collision()) return true;
     ChangeDirection();
     Move();
-    Erase();
 
     return false;
 }
 
-void Snake::Lost(bool lifetime_death)
+void Snake::Lost(bool collision)
 {
     m_Machine = true;
-    std::cout << "\nSNAKE SCORE: " << m_Snake.size() - 6 << '\n' << "FITNESS SCORE: " << Fitness_Function(m_FoodCount, m_Steps, lifetime_death) << '\n';
+    std::cout << "\nSNAKE SCORE: " << m_FoodCount << '\n' << "FITNESS SCORE: " << Fitness_Function(m_FoodCount, m_Steps, collision) << '\n';
     ResetSnake();
 }
 
