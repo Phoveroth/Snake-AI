@@ -107,5 +107,5 @@ struct Life
 
 inline long int Fitness_Function(unsigned int Food, int steps, bool isCollision)
 {
-    return ((Food * Food) + (10 * Food) + steps - ((int)isCollision * 200)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
+    return ((Food * Food) + (10 * Food) + steps - ((int)isCollision * Food * 10)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
 }
