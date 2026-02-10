@@ -1,10 +1,12 @@
 #include "Snake.h"
+#include <fstream>
 
 Snake::Snake(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gamedata, Life* bestonedata) :
     m_MakeBody(BODY, 1),
     m_Prev(GLFW_KEY_UP),
     m_Machine(true),
     m_Start(false),
+    m_IsLoaded(false),
     m_LifeTime(LIFETIME),
     m_MoveTime(60),
     m_BestOneData(bestonedata)
@@ -55,6 +57,7 @@ Snake::Snake(GLFWwindow* window, WindowData* data, UIData* uidata, GameData* gam
     m_Shader->Bind();
     m_Texture = std::make_unique<Texture>();
     m_Texture->PathGenerate("../../res/textures/SnakeAtlas.png");
+    m_Texture->PathGenerate("../../res/textures/SnakeAlp.png");
     m_Texture->Bind(0);
     m_Shader->SetUniform1i("u_textureatlas", 0);
     glDisable(GL_BLEND);
@@ -110,12 +113,16 @@ void Snake::OnUpdate(float deltaTime)
         Smooth();
     } else
     {
-        if (m_Machine)
+        if (m_Machine && !m_IsLoaded)
         {
             m_SnakeData = *m_BestOneData;
             std::cout << "\nGENERATION: (((" << m_SnakeData.ID * REPEAT << ")))\n";
             m_Start = true;
         }
+        if (m_IsLoaded)
+        {
+            m_Start = true;
+        }   
     }
 
     if (!m_Machine)
@@ -254,22 +261,27 @@ void Snake::OtherInputs()
     {
     case GLFW_KEY_M:
         m_Machine = false;
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_N:
         m_Machine = true;
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_Z:
         m_MoveTime = 360;
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_X:
         m_MoveTime = 60;
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_C:
         m_MoveTime = 10;
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_V:
@@ -280,10 +292,39 @@ void Snake::OtherInputs()
         {
             m_GameData->machine_print = true;
         }
+        m_Data->key = 0;
         break;
 
     case GLFW_KEY_B:
         Lost(false);
+        m_Data->key = 0;
+        break;
+
+    case GLFW_KEY_S:
+        Save(&m_SnakeData);
+        m_Data->key = 0;
+        break;
+
+    case GLFW_KEY_L:
+        if (m_IsLoaded)
+        {
+            m_IsLoaded = false;
+            m_Shader->Bind();
+            m_Texture->Bind(0);
+            m_Shader->SetUniform1i("u_textureatlas", 0);
+
+            m_SnakeData = *m_BestOneData;
+            ResetSnake();
+        } else
+        {
+            m_IsLoaded = true;
+            m_Shader->Bind();
+            m_Texture->Bind(1);
+            m_Shader->SetUniform1i("u_textureatlas", 1);
+            
+            Load();
+        }
+        m_Data->key = 0;
         break;
 
     /* case GLFW_KEY_A:
@@ -572,7 +613,12 @@ bool Snake::GameStep()
 void Snake::Lost(bool collision)
 {
     m_Machine = true;
-    std::cout << "\nSNAKE SCORE: " << m_FoodCount << '\n' << "FITNESS SCORE: " << Fitness_Function(m_FoodCount, m_Steps, collision) << '\n';
+    std::cout << "\nSNAKE SCORE: " << m_FoodCount << " (" << (m_FoodCount * 100) / (m_GameData->grid_height * m_GameData->grid_width) << "%)" <<'\n' << "FITNESS SCORE: " << Fitness_Function(m_FoodCount, m_Steps, collision);
+    if (collision)
+    {
+        std::cout << " (collision)\n";
+    } else std::cout << "\n";
+    
     ResetSnake();
 }
 
@@ -1001,6 +1047,68 @@ void Snake::EvaluateInputs()
             m_SnakeData.InputLayer[19].State = 1;
         } else { m_SnakeData.InputLayer[19].State = 0; }
 
+    }
+}
+
+void Snake::Save(Life* DataPointer)
+{
+    std::fstream save;
+
+    save.open("../build/" + std::to_string(m_SnakeData.ID * REPEAT) + ".dat", std::ios::out | std::ios::binary);
+
+    if (save)
+    {
+        save.write(reinterpret_cast<char*>(DataPointer), sizeof(Life));
+        save.close();
+        std::cout << "Saved" << *(reinterpret_cast<int*>(DataPointer)) << std::endl;
+    } else std::cout << "Error while saving!";
+}
+
+void Snake::Load()
+{
+    int a = -1;
+    for (const auto & entry : std::filesystem::directory_iterator("../build"))
+    {
+        std::string fileName = entry.path().filename().generic_string().erase(entry.path().filename().generic_string().length() - 4, 4);
+        bool isit = true;
+
+        for (int i = 0; i < fileName.length(); i++)
+        {
+            if (!(std::isdigit(fileName[i])))
+            {
+                isit = false;
+                break;
+            }
+        }
+        if (isit)
+        {
+            int b = std::stoi(fileName);
+            if (b > a)
+            {
+                a = b;
+            }
+        }
+    }
+    
+    if (a == -1)
+    {
+        std::cout << "Couldn't Load!" << std::endl;
+    } else
+    {
+        ResetSnake();
+        m_Start = true;
+        std::cout << "Loading " << a << "." << std::endl;
+
+        std::fstream load;
+
+        load.open("../build/" + std::to_string(a) + ".dat", std::ios::in | std::ios::binary);
+
+        if (load)
+        {
+            load.read(reinterpret_cast<char*>(&m_SnakeData), sizeof(Life));
+            load.close();
+
+        } else std::cout << "Error while loading!";
     }
 }
 

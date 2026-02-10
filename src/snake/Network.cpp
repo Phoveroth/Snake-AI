@@ -84,7 +84,7 @@ void Network::Flush()
     for (int i = 0; i < FIRST_LAYER; i++)
     {
         m_NodeDatas[id].activation = 0.4f;
-        m_NodeDatas[id].y = i * 2 * m_CubeSize + 8 * m_CubeSize;
+        m_NodeDatas[id].y = i * 2 * m_CubeSize + ((INPUT_LAYER - FIRST_LAYER) * m_CubeSize);
         m_NodeDatas[id].x = 1 * 5 * m_CubeSize;
         id++;
     }
@@ -92,7 +92,7 @@ void Network::Flush()
     for (int i = 0; i < SECOND_LAYER; i++)
     {
         m_NodeDatas[id].activation = 0.6f;
-        m_NodeDatas[id].y = i * 2 * m_CubeSize + 12 * m_CubeSize;
+        m_NodeDatas[id].y = i * 2 * m_CubeSize + ((INPUT_LAYER - SECOND_LAYER) * m_CubeSize);
         m_NodeDatas[id].x = 2 * 5 * m_CubeSize;
         id++;
     }
@@ -100,7 +100,7 @@ void Network::Flush()
     for (int i = 0; i < OUTPUT_LAYER; i++)
     {
         m_NodeDatas[id].activation = 0.8f;
-        m_NodeDatas[id].y = i * 2 * m_CubeSize + 16 * m_CubeSize;
+        m_NodeDatas[id].y = i * 2 * m_CubeSize + ((INPUT_LAYER - OUTPUT_LAYER) * m_CubeSize);
         m_NodeDatas[id].x = 3 * 5 * m_CubeSize;
         id++;
     }

@@ -11,6 +11,8 @@
 
 #include <memory>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <vector>
 #include <thread>
 #include <mutex>
@@ -33,10 +35,10 @@
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
-#define INPUT_LAYER 20
-#define FIRST_LAYER 12
-#define SECOND_LAYER 8
-#define OUTPUT_LAYER 4
+#define INPUT_LAYER  20
+#define FIRST_LAYER  20 //12
+#define SECOND_LAYER 20 //8
+#define OUTPUT_LAYER  4
 
 struct NetworkValues {
     float input[INPUT_LAYER];
@@ -67,6 +69,7 @@ struct GameData {
     bool machine_print = false;
     bool set_values = false;
     NetworkValues network_values;
+    bool running = true;
     bool debugMode = false;
 };
 
@@ -107,5 +110,5 @@ struct Life
 
 inline long int Fitness_Function(unsigned int Food, int steps, bool isCollision)
 {
-    return ((Food * Food) + (10 * Food) + steps - ((int)isCollision * Food * 10)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
+    return ((Food * Food) + (20 * Food) + steps - ((int)isCollision * Food * 10)); // ((Food * Food) + (10 * Food) + steps - ((int)isCollision * Food * 10)); // (Food * Food * Food) + (500 * Food) - i - ((int)isLost * 250 * Food);
 }

@@ -48,7 +48,7 @@ void Thread(GameData* gamedata, Life* bestonedata)
     srand(time(NULL));
     Machine brain(gamedata, bestonedata);
     brain.running = true;
-    while (brain.running)
+    while ((brain.running) && (gamedata->running))
     {
         brain.Run();
     }
@@ -83,7 +83,7 @@ int main()
     std::cout << mode->width << " " << mode->height << " " << mode->refreshRate << "Hz" << '\n';
 
     GameData gamedata;
-    gamedata.dimension = 16; // 8, 16
+    gamedata.dimension = 8; // 8, 16
     gamedata.grid_size = mode->width / 64.0;
     gamedata.grid_width = gamedata.dimension;
     gamedata.grid_height = gamedata.dimension;
@@ -146,6 +146,7 @@ int main()
 
     glfwDestroyWindow(window);
     glfwTerminate();
+    gamedata.running = false;
     worker.join();
 
     return 0;

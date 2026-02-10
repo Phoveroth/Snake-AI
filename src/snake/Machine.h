@@ -3,16 +3,16 @@
 #include "Header.h"
 
 #define POPULATION_SIZE 202 // select / 2 * children + elitism
-#define LIFETIME 200 // 100
+#define LIFETIME 100 // 100
 #define LIFEADD 60 // 20
 #define SELECT 20
 #define ELITISM 2
 #define ALPHA 0.4
 #define CHILDREN 20
-#define MUTATION_RATE 0.1
+#define MUTATION_RATE 0.05
 #define MUTATION 1.0
 #define TEST_COUNT 4
-#define BOOL_INPUT false
+#define BOOL_INPUT true
 
 #define REPEAT 20
 #define PROGRESS_INTERVAL 20
